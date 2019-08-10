@@ -47,7 +47,7 @@
       <ComboBox
         HorizontalAlignment="Left"
         MinWidth="350"
-        ItemsSource="{Binding LanguageCodeList, Mode=OneWay}"
+        ItemsSource="{Binding LanguageCodeList, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
         DisplayMemberPath="Name"
         SelectedValuePath="Value"
         SelectedValue="{Binding Config.LanguageCode, Mode=TwoWay}">
