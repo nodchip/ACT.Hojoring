@@ -14,8 +14,6 @@ namespace ACT.TTSYukkuri.Config.ViewModels
 
         public GoogleCloudTextToSpeechLanguageCode[] LanguageCodeList => Settings.Default.GoogleCloudTextToSpeechSettings.EnumerateLanguageCode();
 
-        public GoogleCloudTextToSpeechVoice[] VoiceList => Settings.Default.GoogleCloudTextToSpeechSettings.EnumerateVoice();
-
         public GoogleCloudTextToSpeechSampleRateHertz[] SampleRateHertzList => Settings.Default.GoogleCloudTextToSpeechSettings.EnumerateSampleRateHertz();
 
         private ICommand setRecommendCommand;

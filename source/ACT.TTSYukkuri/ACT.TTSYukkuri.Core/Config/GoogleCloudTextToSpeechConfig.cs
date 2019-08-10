@@ -3,7 +3,7 @@ using Prism.Mvvm;
 using System;
 using System.Globalization;
 using System.Linq;
-
+using ACT.TTSYukkuri.Config.ViewModels;
 
 namespace ACT.TTSYukkuri.Config
 {
@@ -19,6 +19,7 @@ namespace ACT.TTSYukkuri.Config
         private double pitch;
         private double speakingRate;
         private int sampleRateHertz;
+        private GoogleCloudTextToSpeechVoice[] voiceList;
 
         public GoogleCloudTextToSpeechConfig()
         {
@@ -34,8 +35,7 @@ namespace ACT.TTSYukkuri.Config
             set
             {
                 this.SetProperty(ref this.languageCode, value);
-                // Raise to update the contents of the language code combo box.
-                RaisePropertyChanged("LanguageCodeList");
+                this.VoiceList = EnumerateVoice();
             }
         }
 
@@ -85,16 +85,26 @@ namespace ACT.TTSYukkuri.Config
         }
 
         /// <summary>
+        /// 音声リスト
+        /// </summary>
+        public GoogleCloudTextToSpeechVoice[] VoiceList
+        {
+            get => this.voiceList;
+            set => this.SetProperty(ref this.voiceList, value);
+        }
+
+        /// <summary>
         /// 推奨値を設定する
         /// </summary>
         public void SetRecommend()
         {
             this.LanguageCode = "ja-JP";
-            this.Name = "ja-JP-Wavenet-A";
             this.VolumeGainDb = 0.0;
             this.Pitch = 0.0;
             this.SpeakingRate = 1.0;
             this.SampleRateHertz = 44100;
+            this.VoiceList = EnumerateVoice();
+            this.Name = "ja-JP-Wavenet-A";
         }
 
         public GoogleCloudTextToSpeechLanguageCode[] EnumerateLanguageCode()
@@ -111,7 +121,7 @@ namespace ACT.TTSYukkuri.Config
         public GoogleCloudTextToSpeechVoice[] EnumerateVoice()
         {
             return client
-                .ListVoices(languageCode)
+                .ListVoices(LanguageCode)
                 .Voices
                 .Select(x => new GoogleCloudTextToSpeechVoice { VoiceName = x.Name })
                 .ToArray();
