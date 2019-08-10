@@ -96,7 +96,7 @@ For use for commercial purposes, a license to use the library is required.</syst
   <system:String x:Key="SAPI5_Rate">Rate</system:String>
   <system:String x:Key="SAPI5_Pitch">Pitch</system:String>
 
-  <system:String x:Key="GoogleCloudTextToSpeech_LanguageCode">Language[BCP-47]</system:String>
+  <system:String x:Key="GoogleCloudTextToSpeech_Language">Language</system:String>
   <system:String x:Key="GoogleCloudTextToSpeech_Name">Voice Name</system:String>
   <system:String x:Key="GoogleCloudTextToSpeech_VolumeGainDb">Volume [db]</system:String>
   <system:String x:Key="GoogleCloudTextToSpeech_Pitch">Pitch</system:String>

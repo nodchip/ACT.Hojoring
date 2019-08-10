@@ -96,7 +96,7 @@
   <system:String x:Key="SAPI5_Rate">レート</system:String>
   <system:String x:Key="SAPI5_Pitch">ピッチ</system:String>
 
-  <system:String x:Key="GoogleCloudTextToSpeech_LanguageCode">言語 [BCP-47]</system:String>
+  <system:String x:Key="GoogleCloudTextToSpeech_Language">言語</system:String>
   <system:String x:Key="GoogleCloudTextToSpeech_Name">音声名</system:String>
   <system:String x:Key="GoogleCloudTextToSpeech_VolumeGainDb">ボリューム [db]</system:String>
   <system:String x:Key="GoogleCloudTextToSpeech_Pitch">ピッチ</system:String>

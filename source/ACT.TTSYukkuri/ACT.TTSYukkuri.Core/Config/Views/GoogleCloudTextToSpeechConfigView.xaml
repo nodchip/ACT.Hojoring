@@ -43,7 +43,7 @@
     HorizontalScrollBarVisibility="Disabled"
     VerticalScrollBarVisibility="Auto">
     <StackPanel Orientation="Vertical">
-      <Label Content="{DynamicResource GoogleCloudTextToSpeech_LanguageCode}" />
+      <Label Content="{DynamicResource GoogleCloudTextToSpeech_Language}" />
       <ComboBox
         HorizontalAlignment="Left"
         MinWidth="350"
