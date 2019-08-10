@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Serialization;
-using System.Globalization;
+﻿using Google.Cloud.TextToSpeech.V1;
 using Prism.Mvvm;
-using Google.Cloud.TextToSpeech.V1;
+using System;
+using System.Globalization;
+using System.Linq;
 
 
 namespace ACT.TTSYukkuri.Config
@@ -94,12 +89,12 @@ namespace ACT.TTSYukkuri.Config
         /// </summary>
         public void SetRecommend()
         {
-            this.languageCode = "ja-JP";
-            this.name = "ja-JP-Wavenet-A";
-            this.volumeGainDb = 0.0;
-            this.pitch = 0.0;
-            this.speakingRate = 1.0;
-            this.sampleRateHertz = 44100;
+            this.LanguageCode = "ja-JP";
+            this.Name = "ja-JP-Wavenet-A";
+            this.VolumeGainDb = 0.0;
+            this.Pitch = 0.0;
+            this.SpeakingRate = 1.0;
+            this.SampleRateHertz = 44100;
         }
 
         public GoogleCloudTextToSpeechLanguageCode[] EnumerateLanguageCode()
@@ -141,9 +136,9 @@ namespace ACT.TTSYukkuri.Config
     [Serializable]
     public class GoogleCloudTextToSpeechLanguageCode
     {
-        public string Value => Info.DisplayName;
+        public string Value => Info.Name;
 
-        public string Name => Info.Name;
+        public string Name => Info.DisplayName;
 
         public CultureInfo Info { get; set; }
 
