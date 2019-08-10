@@ -167,7 +167,7 @@
     </Compile>
     <Compile Include="FFXIVWatcher.cs" />
     <Compile Include="FFXIVWatcher.PartyWatcher.cs" />
-    <Compile Include="GoogleCloudTextToSpeech\GoogleCloudTextToSpeechController.cs" />
+    <Compile Include="GoogleCloudTextToSpeech\GoogleCloudTextToSpeechSpeechController.cs" />
     <Compile Include="HOYA\HOYASpeechController.cs" />
     <Compile Include="HOYA\VoiceTextWebAPI.Client\Emotion.cs" />
     <Compile Include="HOYA\VoiceTextWebAPI.Client\EmotionLevel.cs" />
