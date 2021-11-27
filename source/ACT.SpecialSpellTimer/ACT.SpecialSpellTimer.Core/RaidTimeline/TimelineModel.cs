@@ -5,7 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.Loader;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -580,8 +580,10 @@ namespace ACT.SpecialSpellTimer.RaidTimeline
 				// コンパイルする。
 				var references = new MetadataReference[]{
 					MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-					MetadataReference.CreateFromFile(typeof(TimelineXBase).Assembly.Location),
-				};
+                    MetadataReference.CreateFromFile(typeof(TimelineXBase).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(XIVLog).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(Regex).Assembly.Location),
+                };
 				var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
 				var className = Path.GetFileNameWithoutExtension(file);
 				var compilation = CSharpCompilation.Create(className, new[] { syntaxTree }, references, compilationOptions);
@@ -592,8 +594,7 @@ namespace ACT.SpecialSpellTimer.RaidTimeline
 
 					if (emitResult.Success)
 					{
-						stream.Seek(0, SeekOrigin.Begin);
-						var assembly = AssemblyLoadContext.Default.LoadFromStream(stream);
+						var assembly = Assembly.Load(stream.ToArray());
 						var classType = assembly.GetType(className);
 
 						var timelineX = (TimelineXBase)Activator.CreateInstance(classType, null);
@@ -624,7 +625,7 @@ namespace ACT.SpecialSpellTimer.RaidTimeline
 								continue;
 							}
 
-							msg.AppendLine($"{diagnostic.Id} {diagnostic.Descriptor} {diagnostic.Location.SourceSpan.ToString()}");
+							msg.AppendLine(diagnostic.ToString());
 						}
 
 						tl.ErrorText = msg.ToString();
