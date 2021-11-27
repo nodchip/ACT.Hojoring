@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Loader;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -22,6 +23,8 @@ using FFXIV.Framework.Extensions;
 using FFXIV.Framework.Globalization;
 using FFXIV.Framework.WPF.Views;
 using FFXIV.Framework.XIVHelper;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Prism.Commands;
 using RazorEngine;
 using RazorEngine.Configuration;
@@ -499,6 +502,9 @@ namespace ACT.SpecialSpellTimer.RaidTimeline
             set => this.SetProperty(ref this.errorText, value);
         }
 
+        [XmlIgnore]
+        public TimelineXBase TimelineX { get; set; }
+
         #region Methods
 
         public bool ExistsActivities() =>
@@ -565,79 +571,144 @@ namespace ACT.SpecialSpellTimer.RaidTimeline
                 return null;
             }
 
-            var tl = default(TimelineModel);
-            var sb = default(StringBuilder);
+			if (Path.GetExtension(file) == ".cs")
+			{
+				// 構文解析を行う。
+				var syntaxTree = CSharpSyntaxTree.ParseText(text);
+				var diagnostics = syntaxTree.GetDiagnostics().ToList();
 
-            try
-            {
-                // Razorエンジンで読み込む
-                sb = CompileRazor(file);
+				// コンパイルする。
+				var references = new MetadataReference[]{
+					MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+					MetadataReference.CreateFromFile(typeof(TimelineXBase).Assembly.Location),
+				};
+				var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary);
+				var className = Path.GetFileNameWithoutExtension(file);
+				var compilation = CSharpCompilation.Create(className, new[] { syntaxTree }, references, compilationOptions);
+				using (var stream = new MemoryStream())
+				{
+					var emitResult = compilation.Emit(stream);
+					diagnostics.AddRange(emitResult.Diagnostics);
 
-                if (File.Exists(RazorDumpFile))
+					if (emitResult.Success)
+					{
+						stream.Seek(0, SeekOrigin.Begin);
+						var assembly = AssemblyLoadContext.Default.LoadFromStream(stream);
+						var classType = assembly.GetType(className);
+
+						var timelineX = (TimelineXBase)Activator.CreateInstance(classType, null);
+						var tl = timelineX.InitialTimeline;
+						tl.SourceFile = file;
+						tl.TimelineX = timelineX;
+						tl.CompiledText = text;
+						tl.SetDefaultValues();
+						return tl;
+					}
+					else
+					{
+						// コンパイルエラーが起きた場合。
+						var tl = new TimelineModel();
+						tl.SourceFile = file;
+						tl.Name = tl.SourceFileName;
+						tl.HasError = true;
+						tl.Controller.Status = TimelineStatus.Error;
+
+						var msg = new StringBuilder();
+						msg.AppendLine($"TimelineX compile error.");
+						msg.AppendLine($"{tl.SourceFileName}");
+						msg.AppendLine();
+						foreach (var diagnostic in diagnostics)
+						{
+							if (diagnostic.Severity != DiagnosticSeverity.Error)
+							{
+								continue;
+							}
+
+							msg.AppendLine($"{diagnostic.Id} {diagnostic.Descriptor} {diagnostic.Location.SourceSpan.ToString()}");
+						}
+
+						tl.ErrorText = msg.ToString();
+
+						return tl;
+					}
+				}
+			}
+			else
+			{
+                var tl = default(TimelineModel);
+                var sb = default(StringBuilder);
+
+                try
                 {
-                    File.Delete(RazorDumpFile);
-                }
+                    // Razorエンジンで読み込む
+                    sb = CompileRazor(file);
 
-                if (sb.Length > 0)
-                {
-                    using (var sr = new StringReader(sb.ToString()))
+                    if (File.Exists(RazorDumpFile))
                     {
-                        var xs = new XmlSerializer(typeof(TimelineModel));
-                        var data = xs.Deserialize(sr) as TimelineModel;
-                        if (data != null)
+                        File.Delete(RazorDumpFile);
+                    }
+
+                    if (sb.Length > 0)
+                    {
+                        using (var sr = new StringReader(sb.ToString()))
                         {
-                            tl = data;
-                            tl.SourceFile = file;
+                            var xs = new XmlSerializer(typeof(TimelineModel));
+                            var data = xs.Deserialize(sr) as TimelineModel;
+                            if (data != null)
+                            {
+                                tl = data;
+                                tl.SourceFile = file;
+                            }
                         }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                tl = new TimelineModel();
-                tl.SourceFile = file;
-                tl.Name = tl.SourceFileName;
-                tl.HasError = true;
-                tl.Controller.Status = TimelineStatus.Error;
-
-                var msg = new StringBuilder();
-                msg.AppendLine($"Timeline load error.");
-                msg.AppendLine($"{tl.SourceFileName}");
-                msg.AppendLine();
-                msg.AppendLine($"{ex.Message}");
-
-                if (ex.InnerException != null)
+                catch (Exception ex)
                 {
-                    msg.AppendLine($"{ex.InnerException.Message}");
+                    tl = new TimelineModel();
+                    tl.SourceFile = file;
+                    tl.Name = tl.SourceFileName;
+                    tl.HasError = true;
+                    tl.Controller.Status = TimelineStatus.Error;
+
+                    var msg = new StringBuilder();
+                    msg.AppendLine($"Timeline load error.");
+                    msg.AppendLine($"{tl.SourceFileName}");
+                    msg.AppendLine();
+                    msg.AppendLine($"{ex.Message}");
+
+                    if (ex.InnerException != null)
+                    {
+                        msg.AppendLine($"{ex.InnerException.Message}");
+                    }
+
+                    tl.ErrorText = msg.ToString();
+
+                    if (sb != null)
+                    {
+                        File.WriteAllText(
+                            RazorDumpFile,
+                            sb.ToString(),
+                            new UTF8Encoding(false));
+
+                        tl.CompiledText = sb.ToString();
+                    }
+
+                    return tl;
                 }
 
-                tl.ErrorText = msg.ToString();
-
-                if (sb != null)
+                if (tl != null)
                 {
-                    File.WriteAllText(
-                        RazorDumpFile,
-                        sb.ToString(),
-                        new UTF8Encoding(false));
-
-                    tl.CompiledText = sb.ToString();
+                    // 既定値を適用する
+                    tl.SetDefaultValues();
                 }
+
+                // Compile後のテキストを保存する
+                tl.CompiledText = tl != null ?
+                    sb.ToString() :
+                    string.Empty;
 
                 return tl;
             }
-
-            if (tl != null)
-            {
-                // 既定値を適用する
-                tl.SetDefaultValues();
-            }
-
-            // Compile後のテキストを保存する
-            tl.CompiledText = tl != null ?
-                sb.ToString() :
-                string.Empty;
-
-            return tl;
         }
 
         /// <summary>
@@ -1086,6 +1157,7 @@ namespace ACT.SpecialSpellTimer.RaidTimeline
             this.CompiledText = tl.CompiledText;
             this.HasError = tl.HasError;
             this.ErrorText = tl.ErrorText;
+            this.TimelineX = tl.TimelineX;
 
             if (this.IsGlobalZone)
             {

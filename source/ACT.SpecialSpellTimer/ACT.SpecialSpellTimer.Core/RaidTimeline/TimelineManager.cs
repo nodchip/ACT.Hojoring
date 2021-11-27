@@ -216,7 +216,8 @@ namespace ACT.SpecialSpellTimer.RaidTimeline
                 CommonHelper.IsDebugMode ||
                 !Directory.EnumerateFiles(sampleDirectory).Where(x =>
                     x.ToLower().EndsWith(".xml") ||
-                    x.ToLower().EndsWith(".cshtml")).Any();
+                    x.ToLower().EndsWith(".cshtml") ||
+                    x.ToLower().EndsWith(".cs")).Any();
 
             if (existsSamples)
             {
@@ -251,7 +252,8 @@ namespace ACT.SpecialSpellTimer.RaidTimeline
             var list = new List<TimelineModel>();
             foreach (var file in Directory.EnumerateFiles(dir).Where(x =>
                 x.ToLower().EndsWith(".xml") ||
-                x.ToLower().EndsWith(".cshtml")))
+                x.ToLower().EndsWith(".cshtml") ||
+                x.ToLower().EndsWith(".cs")))
             {
                 try
                 {

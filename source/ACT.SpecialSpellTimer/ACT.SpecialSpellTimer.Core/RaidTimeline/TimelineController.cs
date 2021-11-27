@@ -1183,8 +1183,24 @@ namespace ACT.SpecialSpellTimer.RaidTimeline
                     this.CurrentSubroutine?.Name ?? string.Empty,
                     logs));
 
-            // タスクの完了を待つ
-            Task.WaitAll(t1, t2, t3, background);
+			// TimelineXのProcessLogLineを呼び出す
+			var timelineXTask = Task.Run(() =>
+			{
+				var timelineX = this.Model.TimelineX;
+				if (timelineX == null)
+				{
+					return;
+				}
+
+				timelineX.Controller = this;
+				foreach (var xivlog in logs)
+				{
+                    timelineX.ProcessLogLine(xivlog);
+				}
+			});
+
+			// タスクの完了を待つ
+			Task.WaitAll(t1, t2, t3, background, timelineXTask);
 
             // 判定オブジェクトをマージするためのメソッド
             IEnumerable<TimelineBase> mergeDetectors(
